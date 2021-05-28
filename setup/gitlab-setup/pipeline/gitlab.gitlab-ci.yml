@@ -1,0 +1,101 @@
+stages:
+    - build-data-pipeline-dev
+    - build-data-pipeline-master
+    - test-model
+    - build-model-master
+    - build-model-dev
+    - deploy-seldon-master
+
+variables:
+    # $CI_REGISTRY_USER & $CI_REGISTRY_PASSWORD are GitLab variables
+    DATA_IMAGE_NAME: "fmnist-pach"
+    DATA_IMAGE_DOCKER_PATH: "fmnist/data/pipelines/Dockerfile"
+    MODEL_IMAGE_NAME: "fmnist-seldon"
+    MODEL_IMAGE_DOCKER_PATH: "fmnist/deploy/Dockerfile"
+    DEPLOY_MANIFEST_PATH: "fmnist/deploy/deploy.yaml"
+    MODEL_TEST_PATH: "fmnist/test/test_model_accuracy.py"
+    PROD_TAG: "prod"
+    # following variables are necessary to reach the docker daemon socket on microk8s,
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_DRIVER: overlay2
+
+build-data-pipeline-dev:
+  stage: build-data-pipeline-dev
+  image: docker:latest
+  services:
+    - docker:19.03.12-dind
+  before_script:
+    - docker info
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - docker build -t $CI_REGISTRY_USER/$MODEL_IMAGE_NAME:$PROD_TAG -f $MODEL_IMAGE_DOCKER_PATH .
+    - docker push "$CI_REGISTRY_USER/$MODEL_IMAGE_NAME:$CI_COMMIT_SHA"
+
+build-data-pipeline-master:
+  stage: build-data-pipeline-master
+  image: docker:latest
+  services:
+    - docker:19.03.12-dind
+  before_script:
+    - docker info
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - docker build -t $CI_REGISTRY_USER/$MODEL_IMAGE_NAME:$PROD_TAG -f $MODEL_IMAGE_DOCKER_PATH .
+    - docker push "$CI_REGISTRY_USER/$MODEL_IMAGE_NAME:$PROD_TAG"
+  only:
+    - master
+
+# TODO: deploy data pipeline
+# currently no pachctl docker image available
+# pachctl uses the kubectl context to find the cluster, which imposes an additional problem
+
+test-model:
+  image: determinedai/environments:py-3.7-pytorch-1.7-tf-1.15-cpu-0.11.0
+  stage: test-model
+  script:
+    - pip install --upgrade pip
+    - pip install determined==0.15.1
+    - python -m unittest -v $MODEL_TEST_PATH
+
+build-model-dev:
+   # Official docker image.
+  stage: build-model-dev
+  image: docker:latest
+  services:
+    - docker:19.03.12-dind
+  before_script:
+    - docker info
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - docker build -t $CI_REGISTRY_USER/$MODEL_IMAGE_NAME:$CI_COMMIT_SHA -f $MODEL_IMAGE_DOCKER_PATH .
+    - docker push "$CI_REGISTRY_USER/$MODEL_IMAGE_NAME:$CI_COMMIT_SHA"
+  only:
+    - branch
+  needs: ["test-model"]
+
+build-model-master:
+  stage: build-model-master
+  image: docker:latest
+  services:
+    - docker:19.03.12-dind
+  before_script:
+    - docker info
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - docker build -t $CI_REGISTRY_USER/$MODEL_IMAGE_NAME:$PROD_TAG -f $MODEL_IMAGE_DOCKER_PATH .
+    - docker push "$CI_REGISTRY_USER/$MODEL_IMAGE_NAME:$PROD_TAG"
+  only:
+    - master
+  needs: ["test-model"]
+
+deploy-seldon-master:
+    stage: deploy-seldon-master
+    image: bitnami/kubectl
+    script:
+      - echo $KUBE_URL
+      - echo $KUBECONFIG
+      - kubectl apply -f $DEPLOY_MANIFEST_PATH
+    only:
+    - master
+    needs: ["test-model", "build-model-master"]

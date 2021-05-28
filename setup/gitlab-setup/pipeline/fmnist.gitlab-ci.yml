@@ -1,0 +1,55 @@
+stages:
+  - build-data-pipeline
+  - test-model
+  - write-report
+  - load-bucket
+
+variables:
+  DET_MASTER: http://10.64.140.43:8080
+  MINIO_HOST: http://172.23.76.93:9000
+  MINIO_KEY: minio
+  MINIO_SECRET_KEY: miniokey
+  MODEL_TEST_PATH: "fmnist/test/test_model_accuracy.py"
+  MODEL_NAME: "fashion-classifier-tf"
+
+build-data-pipeline:
+    stage: build-data-pipeline
+    image: pachyderm/pachctl:1.13.0
+    script:
+      - pachctl list repo
+
+test-model:
+  stage: test-model
+  image: determinedai/environments:py-3.7-pytorch-1.7-tf-1.15-cpu-0.11.0
+  script:
+    - pip install -q --upgrade pip
+    - pip install -q determined==0.15.1
+    - python -m unittest -v $MODEL_TEST_PATH
+
+write-report:
+  stage: write-report
+  image: determinedai/environments:py-3.7-pytorch-1.7-tf-1.15-cpu-0.11.0
+  script:
+    - pip install -q --upgrade pip
+    - pip install -q determined==0.15.1
+    - det -m $DET_MASTER model list-versions $MODEL_NAME | tee summary.txt
+  artifacts:
+    paths:
+      - summary.txt
+    expire_in: 2 day
+  needs: ["test-model"]
+
+load-bucket:
+    stage: load-bucket
+    image:
+      name: minio/mc
+      entrypoint: ['']
+    before_script:
+      - mc alias set minio $MINIO_HOST $MINIO_KEY $MINIO_SECRET_KEY
+      - mc alias list
+    script:
+      - mc ls minio | tee result.txt
+    artifacts:
+      paths:
+        - result.txt
+      expire_in: 1 day

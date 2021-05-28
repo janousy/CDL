@@ -1,0 +1,7 @@
+deploy-seldon-master:
+    stage: deploy
+    image: bitnami/kubectl
+    script:
+      - echo $KUBE_URL
+      - echo $KUBECONFIG
+      - kubectl apply -f cifar10/deploy/deploy.yaml
