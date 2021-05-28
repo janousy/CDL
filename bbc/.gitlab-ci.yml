@@ -1,0 +1,148 @@
+
+# BBC-NEWS GITLAB PIPELINE
+# Stages within this pipeline pull existing images such that a job completes faster
+# If you have not yet pushed these images (e.g. you switched DockerHub Repo), update the pipeline
+stages:
+    - build-data-image
+    - deploy-data-pipeline
+    - build-train-image
+    - test-model
+    - write-report
+    - build-model-master
+    - build-model-dev
+    - deploy-model-master
+
+variables:
+    # $CI_REGISTRY_USER & $CI_REGISTRY_PASSWORD are GitLab variables, set these!
+    MODEL_NAME: "news-classifier"
+    DET_MASTER: http://10.64.140.43:8080
+
+    # although not best practice, we work with two tags for images
+    # for a more sophisticated approach, consider using $CI_COMMIT_SHA as image tags
+    DEV_TAG: "dev"
+    PROD_TAG: "prod"
+
+    # if you change the repository structure, update these paths accordingly
+    DATA_IMAGE_NAME: "bbc-pach"
+    DATA_IMAGE_DOCKER_PATH: "bbc/data/pipeline/Dockerfile"
+    TRAIN_IMAGE_NAME: "bbc-train"
+    TRAIN_IMAGE_DOCKER_PATH: "bbc/model/Dockerfile"
+    MODEL_TEST_PATH: "bbc/test/test_model_accuracy.py"
+    MODEL_IMAGE_NAME: "bbc-seldon"
+    MODEL_IMAGE_DOCKER_PATH: "bbc/deploy/Dockerfile"
+    DEPLOY_MANIFEST_PATH: "bbc/deploy/deploy.yaml"
+
+    # the following variables are necessary to reach the docker daemon socket on microk8s,
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_DRIVER: overlay2
+
+build-data-image:
+    stage: build-data-image
+    image: docker:latest
+    services:
+      - docker:19.03.12-dind
+    before_script:
+      - docker info
+      - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+    script:
+    #- docker pull $CI_REGISTRY_USER/$DATA_IMAGE_NAME:$DEV_TAG
+    - docker build -t $CI_REGISTRY_USER/$DATA_IMAGE_NAME:$PROD_TAG -f $DATA_IMAGE_DOCKER_PATH .
+    - docker push "$CI_REGISTRY_USER/$DATA_IMAGE_NAME:$PROD_TAG"
+    only:
+      changes:
+        - data
+
+deploy-data-pipeline:
+  stage: deploy-data-pipeline
+  image: pachyderm/pachctl:1.13.2
+  script:
+    - pachctl list pipeline
+    - pachctl update pipeline -f bbc/data/pipeline/validate/bbc-test-validate.json
+    - pachctl update pipeline -f bbc/data/pipeline/validate/bbc-train-validate.json
+    - pachctl update pipeline -f bbbc/data/pipeline/label/bbc-test-store-label.json
+    - pachctl update pipeline -f bbc/data/pipeline/label/bbc-train-store-label.json
+  needs: [ "build-data-image" ]
+  only:
+    changes:
+      - data/pipeline/**/*.json
+
+build-train-image:
+  stage: build-train-image
+  image: docker:latest
+  services:
+    - docker:19.03.12-dind
+  before_script:
+    - docker info
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+  #  - docker pull $CI_REGISTRY_USER/$TRAIN_IMAGE_NAME:$DEV_TAG
+    - docker build -t $CI_REGISTRY_USER/$TRAIN_IMAGE_NAME:$DEV_TAG -f $TRAIN_IMAGE_DOCKER_PATH .
+    - docker push "$CI_REGISTRY_USER/$TRAIN_IMAGE_NAME:$DEV_TAG"
+ # only:
+  #  changes:
+  #    - $TRAIN_IMAGE_DOCKER_PATH
+  #    - bbc/model/src/requirements.txt
+
+test-model:
+  stage: test-model
+  image: determinedai/environments:py-3.7-pytorch-1.7-tf-1.15-cpu-0.11.0
+  script:
+    - pip install -q --upgrade pip
+    - pip install -r bbc/test/requirements.txt
+    - pip install -r bbc/model/src/requirements.txt
+    - python -m unittest -v $MODEL_TEST_PATH
+  #needs: ["build-train-image"]
+
+write-report:
+  stage: write-report
+  image: determinedai/environments:py-3.7-pytorch-1.7-tf-1.15-cpu-0.11.0
+  script:
+    - pip install -q --upgrade pip
+    - pip install -q determined==0.15.1
+    - det -m $DET_MASTER model list-versions $MODEL_NAME | tee summary.md
+  artifacts:
+    paths:
+      - summary.md
+    expire_in: 7 day
+  needs: ["test-model"]
+
+#build-model-dev:
+#   # Official docker image.
+#  stage: build-model-dev
+#  image: docker:latest
+#  services:
+#    - docker:19.03.12-dind
+#  before_script:
+#    - docker info
+#    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+#  script:
+#    - docker build -t $CI_REGISTRY_USER/$MODEL_IMAGE_NAME:$CI_COMMIT_SHA -f $MODEL_IMAGE_DOCKER_PATH .
+#    - docker push "$CI_REGISTRY_USER/$MODEL_IMAGE_NAME:$CI_COMMIT_SHA"
+
+build-model-master:
+  stage: build-model-master
+  image: docker:latest
+  services:
+    - docker:19.03.12-dind
+  before_script:
+    - docker info
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - docker pull "$CI_REGISTRY_USER/$MODEL_IMAGE_NAME:$PROD_TAG"
+    - docker build -t $CI_REGISTRY_USER/$MODEL_IMAGE_NAME:$PROD_TAG -f $MODEL_IMAGE_DOCKER_PATH .
+    - docker push "$CI_REGISTRY_USER/$MODEL_IMAGE_NAME:$PROD_TAG"
+  needs: ["test-model"]
+  only:
+    - master
+
+deploy-model-master:
+    stage: deploy-model-master
+    image: bitnami/kubectl
+    script:
+      - echo $KUBE_URL
+      - echo $KUBECONFIG
+      - kubectl replace -f $DEPLOY_MANIFEST_PATH --force
+    needs: ["build-model-master"]
+    only:
+      - master

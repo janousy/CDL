@@ -1,0 +1,5 @@
+seldon-core~=1.7.0
+determined~=0.15.3
+tensorflow~=1.15.0
+pandas~=1.2.4
+python-pachyderm~=6.1.0

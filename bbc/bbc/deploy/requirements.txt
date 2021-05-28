@@ -1,0 +1,8 @@
+seldon-core~=1.7.0
+determined==0.15.3
+python-pachyderm~=6.1.0
+pandas~=1.2.4
+psycopg2-binary~=2.7.7
+nltk~=3.6.2
+scikit-learn==0.24.2
+torch==1.7.1

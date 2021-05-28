@@ -1,0 +1,23 @@
+description: bbc_pytorch_const
+labels: ["bbc-pytorch"]
+data:
+  source: bbc-train-validate
+  branch: master
+hyperparameters:
+  learning_rate: 0.5
+  hidden1: 256
+  dropout: 0.3
+  global_batch_size: 64
+records_per_epoch: 50000
+searcher:
+  name: single
+  metric: validation_accuracy
+  smaller_is_better: false
+  max_length:
+    epochs: 20
+entrypoint: model_def:BBCTrial
+max_restarts: 0
+min_validation_period:
+  epochs: 10
+environment:
+  image: "jabalt/bbc-train:dev"

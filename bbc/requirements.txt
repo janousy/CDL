@@ -1,0 +1,11 @@
+torch~=1.7.1
+torchvision~=0.8.2
+tensorflow==1.15
+numpy~=1.20.2
+determined~=0.15.1
+python-pachyderm~=6.1.0
+scikit-learn~=0.24.2
+psycopg2-binary~=2.7.7
+pysocks~=1.7.1
+nltk~=3.6.2
+pandas~=1.2.4

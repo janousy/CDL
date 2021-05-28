@@ -1,0 +1,29 @@
+description: fashion_mnist_tf_keras_const
+labels: ["fmnist-keras"]
+# prevent restart on failure
+max_restarts: 0
+data:
+  pachyderm:
+    # LoadBalancer IP
+    host: 10.64.140.44
+    # Default Pachyderm Port
+    port: 650
+    repo: fmnist-train-raw
+    branch: master
+    sources:
+      train-labels: train-labels-idx1-ubyte.gz
+      train-images: train-images-idx3-ubyte.gz
+hyperparameters:
+  global_batch_size: 50
+  dense1: 128
+records_per_epoch: 60000
+searcher:
+  name: single
+  metric: val_accuracy
+  smaller_is_better: false
+  max_length:
+    epochs: 20
+min_validation_period:
+  epochs: 1
+entrypoint: model_def:FashionMNISTTrial
+

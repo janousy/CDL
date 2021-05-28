@@ -1,0 +1,19 @@
+{
+  "pipeline": {
+    "name": "bbc-test-validate"
+  },
+  "description": "A pipeline that validates news articles",
+  "transform": {
+    "image": "jabalt/bbc-pach:prod",
+    "cmd": [ "python3", "/validate.py", "--inputpath", "/pfs/bbc-test-raw" ]
+  },
+  "input": {
+    "pfs": {
+      "repo": "bbc-test-raw",
+      "glob": "/*"
+    }
+  },
+  "resource_requests": {
+    "cpu": 1
+  }
+}

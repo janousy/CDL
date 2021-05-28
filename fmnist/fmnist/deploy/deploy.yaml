@@ -1,0 +1,31 @@
+apiVersion: machinelearning.seldon.io/v1
+kind: SeldonDeployment
+metadata:
+  name: fashion-classifier
+  namespace: default
+spec:
+  name: fashion-classifier
+  predictors:
+  - componentSpecs:
+    - spec:
+        containers:
+        - name: classifier
+          image: jabalt/fmnist-seldon:prod
+          imagePullPolicy: Always
+          securityContext:
+            runAsUser: 0
+    graph:
+      children: []
+      parameters:
+        - name: det_master
+          type: STRING
+          value: "http://10.64.140.43:8080/"
+        - name: model_name
+          type: STRING
+          value: "fashion-classifier"
+      endpoint:
+        type: REST
+      name: classifier
+      type: MODEL
+    name: fashion-classifier
+    replicas: 1

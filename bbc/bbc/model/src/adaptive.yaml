@@ -1,0 +1,37 @@
+description: bbc_pytorch_adaptive_search
+labels: ["bbc-pytorch"]
+data:
+  source: bbc-train-validate
+  branch: master
+hyperparameters:
+  learning_rate:
+    type: double
+    minval: 0.1
+    maxval: 0.7
+  learning_rate_decay: 1e-6
+  global_batch_size:
+    type: int
+    minval: 16
+    maxval: 64
+  hidden1:
+    type: int
+    minval: 256
+    maxval: 512
+  dropout:
+    type: double
+    minval: 0.1
+    maxval: 0.3
+records_per_epoch: 50000
+searcher:
+  name: adaptive_asha
+  metric: validation_accuracy
+  smaller_is_better: false
+  max_length:
+    epochs: 20
+  max_trials: 4
+entrypoint: model_def:BBCTrial
+max_restarts: 0
+min_validation_period:
+  epochs: 10
+environment:
+  image: "jabalt/bbc-train:dev"

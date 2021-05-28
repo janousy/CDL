@@ -1,0 +1,44 @@
+ {
+    "id": 1,
+    "annotations": [
+      {
+        "id": 1,
+        "completed_by": {
+          "id": 1,
+          "email": "janosch.baltensperger@uzh.ch",
+          "first_name": "",
+          "last_name": ""
+        },
+        "state": {},
+        "result": [
+          {
+            "value": {
+              "choices": [
+                "entertainment"
+              ]
+            },
+            "id": "9a-VyL9fX7",
+            "from_name": "sentiment",
+            "to_name": "text",
+            "type": "choices"
+          }
+        ],
+        "was_cancelled": false,
+        "ground_truth": false,
+        "created_at": "2021-05-18T05:46:00.062808Z",
+        "updated_at": "2021-05-18T05:46:00.062828Z",
+        "lead_time": 189.223,
+        "prediction": {},
+        "result_count": 0,
+        "task": 1
+      }
+    ],
+    "predictions": [],
+    "data": {
+      "text": "s3://master.bbc-news-validate/001.txt"
+    },
+    "meta": {},
+    "created_at": "2021-05-16T18:16:42.537677Z",
+    "updated_at": "2021-05-16T18:16:42.537723Z",
+    "project": 1
+  }

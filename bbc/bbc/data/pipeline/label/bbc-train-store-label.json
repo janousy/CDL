@@ -1,0 +1,16 @@
+{
+  "pipeline": {
+    "name": "bbc-train-store-label"
+  },
+  "description": "A pipeline that stores label from labelstudio to postgres",
+  "transform": {
+    "image": "jabalt/bbc-pach:prod",
+    "cmd": [ "python3", "/write_db.py", "--inputpath", "/pfs/bbc-train-label" ]
+  },
+  "input": {
+    "pfs": {
+      "repo": "bbc-train-label",
+      "glob": "/"
+    }
+  }
+}
