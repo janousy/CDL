@@ -46,13 +46,14 @@ build-data-image:
       - docker info
       - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
     script:
-    #- docker pull $CI_REGISTRY_USER/$DATA_IMAGE_NAME:$DEV_TAG
+    - docker pull $CI_REGISTRY_USER/$DATA_IMAGE_NAME:$DEV_TAG
     - docker build -t $CI_REGISTRY_USER/$DATA_IMAGE_NAME:$PROD_TAG -f $DATA_IMAGE_DOCKER_PATH .
     - docker push "$CI_REGISTRY_USER/$DATA_IMAGE_NAME:$PROD_TAG"
     only:
       changes:
-        - data
+        - bbc/data/pipeline/Dockerfile
 
+# deactive pipeline updates if none are deployed yet
 deploy-data-pipeline:
   stage: deploy-data-pipeline
   image: pachyderm/pachctl:1.13.2
@@ -60,12 +61,11 @@ deploy-data-pipeline:
     - pachctl list pipeline
     - pachctl update pipeline -f bbc/data/pipeline/validate/bbc-test-validate.json
     - pachctl update pipeline -f bbc/data/pipeline/validate/bbc-train-validate.json
-    - pachctl update pipeline -f bbbc/data/pipeline/label/bbc-test-store-label.json
+    - pachctl update pipeline -f bbc/data/pipeline/label/bbc-test-store-label.json
     - pachctl update pipeline -f bbc/data/pipeline/label/bbc-train-store-label.json
-  needs: [ "build-data-image" ]
   only:
     changes:
-      - data/pipeline/**/*.json
+      - bbc/data/**/*
 
 build-train-image:
   stage: build-train-image
@@ -79,10 +79,10 @@ build-train-image:
   #  - docker pull $CI_REGISTRY_USER/$TRAIN_IMAGE_NAME:$DEV_TAG
     - docker build -t $CI_REGISTRY_USER/$TRAIN_IMAGE_NAME:$DEV_TAG -f $TRAIN_IMAGE_DOCKER_PATH .
     - docker push "$CI_REGISTRY_USER/$TRAIN_IMAGE_NAME:$DEV_TAG"
- # only:
-  #  changes:
-  #    - $TRAIN_IMAGE_DOCKER_PATH
-  #    - bbc/model/src/requirements.txt
+  only:
+    changes:
+      - $TRAIN_IMAGE_DOCKER_PATH
+      - bbc/model/src/requirements.txt
 
 test-model:
   stage: test-model
@@ -92,7 +92,6 @@ test-model:
     - pip install -r bbc/test/requirements.txt
     - pip install -r bbc/model/src/requirements.txt
     - python -m unittest -v $MODEL_TEST_PATH
-  #needs: ["build-train-image"]
 
 write-report:
   stage: write-report
@@ -106,19 +105,6 @@ write-report:
       - summary.md
     expire_in: 7 day
   needs: ["test-model"]
-
-#build-model-dev:
-#   # Official docker image.
-#  stage: build-model-dev
-#  image: docker:latest
-#  services:
-#    - docker:19.03.12-dind
-#  before_script:
-#    - docker info
-#    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
-#  script:
-#    - docker build -t $CI_REGISTRY_USER/$MODEL_IMAGE_NAME:$CI_COMMIT_SHA -f $MODEL_IMAGE_DOCKER_PATH .
-#    - docker push "$CI_REGISTRY_USER/$MODEL_IMAGE_NAME:$CI_COMMIT_SHA"
 
 build-model-master:
   stage: build-model-master

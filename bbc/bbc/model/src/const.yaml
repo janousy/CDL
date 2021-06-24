@@ -1,10 +1,11 @@
+name: news-classifier-pytorch-const
 description: bbc_pytorch_const
 labels: ["bbc-pytorch"]
 data:
   source: bbc-train-validate
   branch: master
 hyperparameters:
-  learning_rate: 0.5
+  learning_rate: 0.45
   hidden1: 256
   dropout: 0.3
   global_batch_size: 64

@@ -1,6 +1,6 @@
 # Fashion-MNIST GITLAB PIPELINE
 # Stages within this pipeline pull existing images such that a job completes faster
-# If you have not yet pushed these images (e.g. you switched image registry), update the pipeline
+# If you have not yet pushed these images (e.g. you switched image registry), update the pipeline by commenting out docker pulls
 
 stages:
     - build-train-image

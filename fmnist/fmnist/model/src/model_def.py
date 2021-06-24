@@ -1,12 +1,6 @@
 """
-This example shows how to use Determined to implement an image
-classification model for the Fashion-MNIST dataset using tf.keras.
-
-Based on: https://www.tensorflow.org/tutorials/keras/classification.
-
-After about 5 training epochs, accuracy should be around > 85%.
-This mimics theoriginal implementation. Continue training or increase
-the number of epochs to increase accuracy.
+Adopted from: https://docs.determined.ai/latest/tutorials/tf-mnist-tutorial.html
+Originally based on: https://www.tensorflow.org/tutorials/keras/classification.
 """
 import tensorflow as tf
 from tensorflow import keras

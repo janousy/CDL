@@ -1,4 +1,4 @@
-determined~=0.15.3
+determined==0.16.0
 torch~=1.7.1
 python-pachyderm==6.1.0
 scikit-learn==0.24.2

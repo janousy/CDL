@@ -65,10 +65,8 @@ class NewsModel(object):
         ----------
         X : array-like
         """
-
-        logging.info(X.shape)
-        X = X[0]
         logging.info("Predict called")
+        X = X[0]
         logging.info(X)
         logging.info(type(X))
         logging.info(X.shape)

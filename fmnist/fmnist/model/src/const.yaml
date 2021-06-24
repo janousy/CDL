@@ -1,3 +1,4 @@
+name: fashion-classifier-keras-const
 description: fashion_mnist_tf_keras_const
 labels: ["fmnist-keras"]
 # prevent restart on failure

@@ -6,10 +6,14 @@ import argparse
 import pathlib
 logging.basicConfig(level=logging.INFO)
 
-# This script validates news articles from the bbc data set
-# As validation & cleaning criteria, the texts required to be UTF-8 encoded and a minimum length
-MIN_NEWS_LENGTH = 20
+"""
+This script cleans and validates news articles from the bbc data set.
+The data is not tested per se.
+- cleaning: ensure UTF-8 encoding
+- validation: minimum character length and TXT file format
+"""
 
+MIN_NEWS_LENGTH = 20
 def validate(file):
     tail = os.path.split(file)[1]
     try:

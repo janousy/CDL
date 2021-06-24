@@ -8,6 +8,11 @@ import logging
 from urllib.parse import urlparse
 logging.basicConfig(level=logging.INFO)
 
+"""
+This script writes the labels exported from LabelStudio into a Pachyderm repository in to a Postgres table
+Assuming the labels are in LabelStudio JSON export format
+Secrets are currently not handled as this prototype is for demonstration purposes
+"""
 def write_label_to_db(cursor, args, file):
     # load label in json format and extract values
     file_label = open(file)

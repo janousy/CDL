@@ -1,3 +1,4 @@
+name: news-classifier-pytorch-adaptive
 description: bbc_pytorch_adaptive_search
 labels: ["bbc-pytorch"]
 data:

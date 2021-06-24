@@ -1,4 +1,19 @@
+name: fashion-classifier-keras-adaptive
 description: fashion_mnist_tf_keras_adaptive_search
+labels: ["fmnist-keras"]
+# prevent restart on failure
+max_restarts: 0
+data:
+  pachyderm:
+    # LoadBalancer IP
+    host: 10.64.140.44
+    # Default Pachyderm Port
+    port: 650
+    repo: fmnist-train-raw
+    branch: master
+    sources:
+      train-labels: train-labels-idx1-ubyte.gz
+      train-images: train-images-idx3-ubyte.gz
 hyperparameters:
   global_batch_size: 32
   dense1:
