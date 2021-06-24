@@ -12,4 +12,4 @@ Both use cases include their individual README for guidance.
 
 Where to start? Read through the `setup/setup.md` and spin up your infrastructure. Then you can apply the use cases and modify them to your needs or build your own.
 
-![Continuous%20Deep%20Learning%207969e7d46a234395bfdc244f36e6f442/overview_abstract.png](Continuous%20Deep%20Learning%207969e7d46a234395bfdc244f36e6f442/overview_abstract.png)
+![resources/overview_abstract.png](resources/overview_abstract.png)
