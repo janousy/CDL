@@ -1,6 +1,8 @@
 # Use Case 1 - BBC News Text Classification
 
-This use case trains and deploys a text classification model, based on the BBC News dataset available at [http://mlg.ucd.ie/datasets/bbc.html](http://mlg.ucd.ie/datasets/bbc.html)
+This use case trains and deploys a text classification model, based on the BBC News dataset available at [http://mlg.ucd.ie/datasets/bbc.html](http://mlg.ucd.ie/datasets/bbc.html).
+
+The source code compromises the `.gitlab-ci.yml` CI/CD pipeline and a main folder with three subdirectories for the `data`, `model` and `deploy` pipeline. Additionally, a `test` folder includes the scripts to evaluate the current model. Create a new GitLab repository and upload the content related to this use case.
 
 ## Data Pipeline
 
@@ -8,9 +10,9 @@ This use case trains and deploys a text classification model, based on the BBC N
 
 [https://www.postgresql.org/](https://www.postgresql.org/)
 
-- Within postgres, setup a user `postgres` (created by default) and set the password to `postgres`
+- Within Postgres, set up a user `postgres` (created by default) and set the password to `postgres`
 - If you choose a different username and password, adjust the credentials within the files `bbc/data/pipeline/label/write_db.py` and `bbc/model/src/data.py` accordingly.
-- Setup a database `bbc-news` , and create two tables:
+- Set up a database `bbc-news`, and create two tables:
 
 ```sql
 CREATE TABLE IF NOT EXISTS bbc_test (
@@ -38,9 +40,9 @@ CREATE TABLE IF NOT EXISTS bbc_train (
 
 In this use case, the Pachyderm Enterprise edition was used, which is activated until the end of the year 2021. If you choose to use the Community edition, you will be able to reproduce everything performed in this use case, but you cannot directly ingest data from repositories into LabelStudio, as the S3 gateway is not exposed.
 
-- Download the raw bbc-news dataset from the following link: [http://mlg.ucd.ie/files/datasets/bbc-fulltext.zip](http://mlg.ucd.ie/files/datasets/bbc-fulltext.zip)
-- The dataset is initially split. To generate a test and train dataset, run the script `bbc/data/prepare/bbc-generate-dataset.py`, whereby you have to adjust the paths according to your needs
-- Then create the pachyderm repositories and pipelines. The created pipelines clean & validate the news articles, and ingest labels into the database
+- Download the raw bbc-news dataset from the following link: [http://mlg.ucd.ie/files/datasets/bbc-fulltext.zip](http://mlg.ucd.ie/files/datasets/bbc-fulltext.zip).
+- The dataset is initially split. To generate a test and train dataset, run the script `bbc/data/prepare/bbc-generate-dataset.py`, whereby you have to adjust the paths according to your needs.
+- Then create the pachyderm repositories and pipelines. The created pipelines clean & validate the news articles, and ingest labels into the database.
 
 ```bash
 # create the repositories for the raw dataset
@@ -76,7 +78,7 @@ pachctl create pipeline -f bbc-train-store-label.json
 
 In this use case, we do not label our data manually using LabelStudio, but you can ingest the validated data through the S3 gateway exposed by the Pachyderm Enterprise edition for each repository.
 
-- In order to connect LabelStudio to a Pachyderm repository, check out the installation instructions of LabelStudio
+- To connect LabelStudio to a Pachyderm repository, look into the installation instructions of LabelStudio.
 
 ## Model Pipeline
 
@@ -119,7 +121,7 @@ det model describe $MODEL_NAME
 det model list-versions $MODEL_NAME
 ```
 
-- After registering a new model version, you can push your code to the repository. In this case, the last submitted experiment corresponds to code locally. If the registered checkpoint wasn't not produced by the last submitted experiment, the local code has to be adjusted, e.g. by downloading the model artifacts and replacing the model code.
+- After registering a new model version, you can push your code to the repository. In this case, the last submitted experiment corresponds to code locally. If the registered checkpoint was not produced by the last submitted experiment, the local code has to be adjusted, e.g. by downloading the model artifacts and replacing the model code via the determined CLI.
 - The GitLab pipeline will trigger and test the new model version. The python test `bbc/test/test_model_accuracy.py` loads the model artifacts from the DeterminedAI registry and a test dataset.  A report will be produced as a pipeline artifact that lists the model versions and their metadata, which includes the test results.
 
 ## Deployment Pipeline
@@ -127,8 +129,8 @@ det model list-versions $MODEL_NAME
 The deployment is solely performed through a GitLab pipeline on the `master` branch only:
 
 - The model wrapper loads the model artifacts from DeterminedAI, including its dependencies such as the vocabulary and the classes.
-- A build-step builds and pushes a Docker image for the Seldon micro-service , using the model wrapper `bbc/deploy/NewsModel.py` defined to perform predictions.
-- Another GitLab job then deploys the wrapped model to the Kubernetes cluster, using the deployment manifest `bbc/deploy/deploy.yaml` .
+- A build-step builds and pushes a Docker image for the Seldon micro-service, using the model wrapper `bbc/deploy/NewsModel.py` defined to perform predictions.
+- Another GitLab job then deploys the wrapped model to the Kubernetes cluster, using the deployment manifest `bbc/deploy/deploy.yaml`.
 
 Seldon exposes a Swagger API documentation, where we can test our endpoint:
 
@@ -140,7 +142,7 @@ http://<EXTERNAL-IP>/seldon/<namespace>/<model-name>/api/v1.0/doc/
 http://10.64.140.45/seldon/default/news-classifier/api/v1.0/doc/
 ```
 
-We can then send a JSON-request to the endpoint at `/seldon/default/news-classifier/api/v1.0/predictions`
+We can then send a JSON-request to the endpoint to `http://<EXTERNAL-IP>/seldon/default/news-classifier/api/v1.0/predictions`
 
 ```sql
 {

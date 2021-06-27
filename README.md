@@ -10,10 +10,10 @@ In summary, it becomes apparent that the deep learning lifecycle compromises a l
 
 The contents of this repository are the following:
 
-- SETUP: An installation guideline and required setup files
-- BBC - Use Case 1: source code for the text classification use case
-- FMNIST - Use Case 2: source code for the image classification use case
+- **SETUP**: An installation guideline and required setup files for the prototype
+- **BBC** - Use Case 1: source code for the text classification use case
+- **FMNIST** - Use Case 2: source code for the image classification use case
 
 Both use cases include their individual README for guidance.
 
-Where to start? Read through the `setup/setup.md` and spin up your infrastructure. Then you can apply the use cases and modify them to your needs or build your own. A summary of the prototype is illustrated in the following figure: ![resources/prototype_overview.png](resources/prototype_overview.png)
+Where to start? Read through the `setup/setup.md` and spin up your infrastructure. Then you can apply the use cases and modify them to your needs or build your own.
