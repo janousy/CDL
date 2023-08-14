@@ -18,8 +18,10 @@ Both use cases include their individual README for guidance.
 
 Where to start? Read through the `setup/setup.md` and spin up your infrastructure. Then you can apply the use cases and modify them to your needs or build your own.
 
-![Data Pipeline](https://github.com/janousy/CDL/blob/master/resources/prototype_data.png)
+![Overview](resources/abstract_overview.png)
 
-![Model Pipeline](https://github.com/janousy/CDL/blob/master/resources/prototype_model.png)
+![Data Pipeline](resources/prototype_data.png)
 
-![Deployment Pipeline](https://github.com/janousy/CDL/blob/master/resources/prototype_deploy.png)
+![Model Pipeline](resources/prototype_model.png)
+
+![Deployment Pipeline](resources/prototype_deploy.png)
